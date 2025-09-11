@@ -40,17 +40,16 @@ if st.session_state.show_add_contact_form:
         email_new = st.text_input("Email")
         linkedin_new = st.text_input("Profil LinkedIn")
         
-        # Le bouton de soumission pour le formulaire d'ajout
         if st.form_submit_button("Créer le contact", use_container_width=True):
             if create_new_compte:
                 if not new_compte_name or not prenom_new or not nom_new:
                     st.error("Le nom du nouveau compte, le prénom et le nom du contact sont obligatoires.")
                 else:
-                    db.add_compte(new_compte_name, "À qualifier", "", "", "N")
-                    new_compte_id = db.get_all_comptes().set_index('nom').loc[new_compte_name]['id']
+                    new_compte_id = db.add_compte(new_compte_name, "À qualifier", "", "", "N")
                     db.add_contact(prenom_new, nom_new, role_new, email_new, linkedin_new, "", new_compte_id)
                     st.success(f"Compte '{new_compte_name}' et contact '{prenom_new} {nom_new}' créés !")
                     st.session_state.show_add_contact_form = False
+                    st.cache_data.clear()
                     st.rerun()
             else:
                 if not prenom_new or not nom_new:
@@ -62,6 +61,7 @@ if st.session_state.show_add_contact_form:
                     db.add_contact(prenom_new, nom_new, role_new, email_new, linkedin_new, "", selected_compte_id)
                     st.success(f"Contact '{prenom_new} {nom_new}' ajouté à {selected_compte_name} !")
                     st.session_state.show_add_contact_form = False
+                    st.cache_data.clear()
                     st.rerun()
 
 st.divider()
@@ -84,7 +84,7 @@ if not all_comptes_for_view.empty:
         contact_id = contact_list[selected_contact_name]
         details = db.get_contact_details(contact_id)
 
-        # Formulaire de la fiche de contact
+        # --- FICHE CONTACT COMPLÈTE ---
         with st.form(f"fiche_contact_{contact_id}"):
             st.subheader(f"📝 Fiche de {details.get('prenom')} {details.get('nom')}")
 
@@ -109,14 +109,42 @@ if not all_comptes_for_view.empty:
             with c4:
                 prochaine_action_notes = st.text_input("Description de l'action", value=details.get('prochaine_action_notes', ''))
             
-            # Le bouton de soumission pour la fiche de contact
-            if st.form_submit_button("💾 Enregistrer toutes les modifications", use_container_width=True):
-                date_to_save = str(date_prochaine_action) if date_prochaine_action else None
-                db.update_contact(contact_id, prenom, nom, role, email, linkedin, derniere_action, date_to_save, prochaine_action_notes)
-                st.success("Fiche contact mise à jour avec succès !")
-                st.rerun()
+            # --- Boutons d'action Enregistrer et Supprimer ---
+            col1_btn, col2_btn = st.columns([3, 1])
+            with col1_btn:
+                if st.form_submit_button("💾 Enregistrer les modifications", use_container_width=True, type="primary"):
+                    date_to_save = str(date_prochaine_action) if date_prochaine_action else None
+                    db.update_contact(contact_id, prenom, nom, role, email, linkedin, derniere_action, date_to_save, prochaine_action_notes)
+                    st.success("Fiche contact mise à jour !")
+                    st.rerun()
+            with col2_btn:
+                if st.form_submit_button("🗑️ Supprimer", use_container_width=True):
+                    st.session_state.contact_to_delete = contact_id
+                    st.rerun()
 
-        # Section Historique et Ajout d'Interaction
+        # --- Logique de confirmation de suppression ---
+        if 'contact_to_delete' in st.session_state and st.session_state.contact_to_delete is not None:
+            contact_id_del = st.session_state.contact_to_delete
+            # Pour éviter une erreur si le contact vient d'être supprimé, on vérifie qu'il est encore dans la liste
+            if contact_id_del in contact_list.values():
+                details_del = db.get_contact_details(contact_id_del)
+                st.warning(f"Êtes-vous sûr de vouloir supprimer définitivement le contact **{details_del['prenom']} {details_del['nom']}** ?")
+                
+                col1_del, col2_del = st.columns(2)
+                with col1_del:
+                    if st.button("✅ Oui, supprimer", use_container_width=True, type="primary"):
+                        db.delete_contact(contact_id_del)
+                        st.success("Le contact a été supprimé.")
+                        del st.session_state.contact_to_delete
+                        st.cache_data.clear()
+                        st.rerun()
+                with col2_del:
+                    if st.button("❌ Annuler", use_container_width=True):
+                        del st.session_state.contact_to_delete
+                        st.rerun()
+
+        st.divider()
+        # --- Historique des Interactions ---
         st.header("📖 Historique des Interactions")
         with st.expander("💬 Ajouter une nouvelle interaction"):
             with st.form("add_interaction_form", clear_on_submit=True):
@@ -124,7 +152,6 @@ if not all_comptes_for_view.empty:
                 interaction_type = st.selectbox("Type", ["Email", "Appel", "LinkedIn", "Réunion"])
                 interaction_notes = st.text_area("Notes sur l'interaction")
                 
-                # Le bouton de soumission pour l'ajout d'interaction
                 if st.form_submit_button("Ajouter l'interaction"):
                     db.add_interaction(contact_id, str(interaction_date), interaction_type, interaction_notes)
                     st.success("Interaction ajoutée !")
