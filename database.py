@@ -5,7 +5,15 @@ import pandas as pd
 DB_FILE = "prospection.db"
 
 def get_db_connection():
-    return sqlite3.connect(DB_FILE)
+    """Crée et retourne une connexion à la base de données Supabase."""
+    try:
+        # On lit l'URL de connexion depuis les secrets de Streamlit
+        connection_string = st.secrets["SUPABASE_CONNECTION_STRING"]
+        engine = sqlalchemy.create_engine(connection_string)
+        return engine.connect()
+    except Exception as e:
+        st.error(f"Erreur de connexion à la base de données : {e}")
+        return None
 
 # --- Fonctions pour les Comptes ---
 def get_compte_details(compte_id):
