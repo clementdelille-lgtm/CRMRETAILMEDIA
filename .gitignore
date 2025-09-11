@@ -1,5 +1,5 @@
 # Fichier de base de données (ne pas versionner les données en direct)
-prospection.db
+# prospection.db
 
 # Dossier de l'environnement virtuel
 prospection_env/
