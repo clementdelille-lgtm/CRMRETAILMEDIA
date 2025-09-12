@@ -32,15 +32,18 @@ st.header("Activité au Fil du Temps")
 interactions_over_time = db.get_interactions_over_time()
 
 if not interactions_over_time.empty:
-    # Convertir la colonne de date en format datetime
-    interactions_over_time['date_interaction'] = pd.to_datetime(interactions_over_time['date_interaction'])
+    # Corriger les types de données si nécessaire et gérer les valeurs manquantes
+    interactions_over_time['date_interaction'] = pd.to_datetime(interactions_over_time['date_interaction'], errors='coerce')
+    interactions_over_time.dropna(subset=['date_interaction'], inplace=True)
     
     # Agréger le nombre d'interactions par semaine
-    weekly_activity = interactions_over_time.resample('W-Mon', on='date_interaction').count()
-    weekly_activity.rename(columns={'date_interaction': 'nombre_actions'}, inplace=True)
+    weekly_activity = interactions_over_time.groupby(pd.Grouper(key='date_interaction', freq='W')).agg(nombre_actions=('date_interaction', 'count')).reset_index()
+
+    # Le code a été corrigé pour utiliser agg() qui donne un nom de colonne clair
+    # et évite la confusion avec reset_index()
     
     fig_bar = go.Figure(data=[go.Bar(
-        x=weekly_activity.index,
+        x=weekly_activity['date_interaction'],
         y=weekly_activity['nombre_actions'],
     )])
     fig_bar.update_layout(

@@ -60,7 +60,7 @@ with col2:
             y = funnel_data['statut'],
             x = funnel_data['count'],
             textinfo = "value+percent initial",
-            marker = {"colors": ["#004f71", "#008ac5", "#00bfff", "#87ceeb"]}
+            marker = {"color": ["#004f71", "#008ac5", "#00bfff", "#87ceeb"]}
             ))
         fig.update_layout(margin=dict(l=20, r=20, t=30, b=20))
         st.plotly_chart(fig, use_container_width=True)

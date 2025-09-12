@@ -13,52 +13,69 @@ if 'show_add_contact_form' not in st.session_state:
 
 if st.button("➕ Nouveau Contact", type="primary"):
     st.session_state.show_add_contact_form = not st.session_state.show_add_contact_form
+    # Efface les détails si on change de mode
+    if 'contact_to_delete' in st.session_state:
+        del st.session_state.contact_to_delete
 
 # --- Le formulaire d'ajout ne s'affiche que si notre variable est True ---
 if st.session_state.show_add_contact_form:
-    with st.form("add_contact_form", clear_on_submit=True):
-        st.header("Ajouter un Contact")
-        
-        all_comptes = db.get_all_comptes()
-        compte_names = {row['nom']: row['id'] for index, row in all_comptes.iterrows()}
+    st.header("Ajouter un Contact")
+    
+    # --- CHOIX DU COMPTE : Géré HORS du formulaire ---
+    all_comptes = db.get_all_comptes()
+    compte_names = {row['nom']: row['id'] for index, row in all_comptes.iterrows()}
 
-        create_new_compte = st.checkbox("Créer un nouveau compte en même temps")
-        
-        if create_new_compte:
-            new_compte_name = st.text_input("Nom du nouveau compte *")
+    creation_choice = st.radio(
+        "Souhaitez-vous créer un nouveau compte ou en choisir un existant ?",
+        ('Créer un nouveau compte', 'Choisir un compte existant')
+    )
+    
+    selected_compte_id = None
+    new_compte_name = None
+    
+    if creation_choice == 'Créer un nouveau compte':
+        new_compte_name = st.text_input("Nom du nouveau compte *", key="new_compte_name_input")
+    else:
+        if not all_comptes.empty:
+            selected_compte_name = st.selectbox("Choisir un compte existant", options=compte_names.keys(), key="existing_compte_select")
+            selected_compte_id = compte_names[selected_compte_name]
         else:
-            if not all_comptes.empty:
-                selected_compte_name = st.selectbox("Choisir un compte existant", options=compte_names.keys())
-            else:
-                st.warning("Aucun compte existant. Cochez la case ci-dessus pour en créer un.")
-                selected_compte_name = None
+            st.warning("Aucun compte existant. Veuillez en créer un.")
 
+    # --- FORMULAIRE DES DÉTAILS DU CONTACT ---
+    with st.form("add_contact_form", clear_on_submit=True):
         st.subheader("Informations du nouveau contact")
-        prenom_new = st.text_input("Prénom *")
-        nom_new = st.text_input("Nom *")
-        role_new = st.text_input("Rôle")
-        email_new = st.text_input("Email")
-        linkedin_new = st.text_input("Profil LinkedIn")
+        
+        prenom_new = st.text_input("Prénom *", key="prenom_new_input")
+        nom_new = st.text_input("Nom *", key="nom_new_input")
+        role_new = st.text_input("Rôle", key="role_new_input")
+        email_new = st.text_input("Email", key="email_new_input")
+        linkedin_new = st.text_input("Profil LinkedIn", key="linkedin_new_input")
+        
+        statut_prospection_new = st.selectbox(
+            "Statut de Prospection",
+            options=["À Contacter", "Contacté", "Intéressé", "Non intéressé"],
+            key="statut_prospection_new_select"
+        )
         
         if st.form_submit_button("Créer le contact", use_container_width=True):
-            if create_new_compte:
+            if creation_choice == 'Créer un nouveau compte':
                 if not new_compte_name or not prenom_new or not nom_new:
                     st.error("Le nom du nouveau compte, le prénom et le nom du contact sont obligatoires.")
                 else:
                     new_compte_id = db.add_compte(new_compte_name, "À qualifier", "", "", "N")
-                    db.add_contact(prenom_new, nom_new, role_new, email_new, linkedin_new, "", new_compte_id)
+                    db.add_contact(prenom_new, nom_new, role_new, email_new, linkedin_new, statut_prospection_new, None, new_compte_id)
                     st.success(f"Compte '{new_compte_name}' et contact '{prenom_new} {nom_new}' créés !")
                     st.session_state.show_add_contact_form = False
                     st.cache_data.clear()
                     st.rerun()
-            else:
-                if not prenom_new or not nom_new:
+            else: # Choix d'un compte existant
+                if selected_compte_id is None:
+                    st.error("Aucun compte n'a été sélectionné.")
+                elif not prenom_new or not nom_new:
                     st.error("Le prénom et le nom du contact sont obligatoires.")
-                elif selected_compte_name is None:
-                    st.error("Veuillez sélectionner un compte ou en créer un nouveau.")
                 else:
-                    selected_compte_id = compte_names[selected_compte_name]
-                    db.add_contact(prenom_new, nom_new, role_new, email_new, linkedin_new, "", selected_compte_id)
+                    db.add_contact(prenom_new, nom_new, role_new, email_new, linkedin_new, statut_prospection_new, None, selected_compte_id)
                     st.success(f"Contact '{prenom_new} {nom_new}' ajouté à {selected_compte_name} !")
                     st.session_state.show_add_contact_form = False
                     st.cache_data.clear()
@@ -98,6 +115,25 @@ if not all_comptes_for_view.empty:
                 linkedin = st.text_input("Profil LinkedIn", value=details.get('linkedin', ''))
             
             role = st.text_input("Rôle / Poste", value=details.get('role', ''))
+            
+            # --- CHAMP : Statut de prospection (pour la mise à jour) ---
+            statut_prospection_value = details.get('statut_prospection')
+            status_options = ["À Contacter", "Contacté", "Intéressé", "Non intéressé"]
+
+            if statut_prospection_value is None:
+                index_value = 0
+            else:
+                try:
+                    index_value = status_options.index(statut_prospection_value)
+                except ValueError:
+                    index_value = 0
+
+            statut_prospection_update = st.selectbox(
+                "Statut de Prospection",
+                options=status_options,
+                index=index_value
+            )
+            
             derniere_action = st.text_area("Notes sur la dernière action", value=details.get('derniere_action', ''))
             
             st.markdown("##### ⏭️ Prochaine Action")
@@ -114,7 +150,7 @@ if not all_comptes_for_view.empty:
             with col1_btn:
                 if st.form_submit_button("💾 Enregistrer les modifications", use_container_width=True, type="primary"):
                     date_to_save = str(date_prochaine_action) if date_prochaine_action else None
-                    db.update_contact(contact_id, prenom, nom, role, email, linkedin, derniere_action, date_to_save, prochaine_action_notes)
+                    db.update_contact(contact_id, prenom, nom, role, email, linkedin, derniere_action, date_to_save, prochaine_action_notes, statut_prospection_update)
                     st.success("Fiche contact mise à jour !")
                     st.rerun()
             with col2_btn:
@@ -125,7 +161,6 @@ if not all_comptes_for_view.empty:
         # --- Logique de confirmation de suppression ---
         if 'contact_to_delete' in st.session_state and st.session_state.contact_to_delete is not None:
             contact_id_del = st.session_state.contact_to_delete
-            # Pour éviter une erreur si le contact vient d'être supprimé, on vérifie qu'il est encore dans la liste
             if contact_id_del in contact_list.values():
                 details_del = db.get_contact_details(contact_id_del)
                 st.warning(f"Êtes-vous sûr de vouloir supprimer définitivement le contact **{details_del['prenom']} {details_del['nom']}** ?")
@@ -154,7 +189,7 @@ if not all_comptes_for_view.empty:
                 
                 if st.form_submit_button("Ajouter l'interaction"):
                     db.add_interaction(contact_id, str(interaction_date), interaction_type, interaction_notes)
-                    st.success("Interaction ajoutée !")
+                    st.success("Interaction ajoutée et date de dernière interaction mise à jour !")
                     st.rerun()
 
         interactions_df = db.get_interactions_for_contact(contact_id)
