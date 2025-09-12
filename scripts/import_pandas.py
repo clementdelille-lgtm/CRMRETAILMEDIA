@@ -2,9 +2,9 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 # --- PARAMÈTRES ---
-EXCEL_FILE_PATH = "Suivi Prospection CPGMAJ.xlsx" # Le nom de votre fichier Excel
+EXCEL_FILE_PATH = "../data/Suivi Prospection CPGMAJ.xlsx" # Le nom de votre fichier Excel
 SHEET_NAME = "FMCG GLOBAL"                       # Le nom de la feuille à convertir
-DB_FILE_PATH = "prospection.db"                  # Le nom de votre future base de données
+DB_FILE_PATH = "../data/prospection.db"                  # Le nom de votre future base de données
 TABLE_NAME = "contacts"                          # Le nom que vous donnez à la table dans la base
 
 # --- SCRIPT DE CONVERSION ---

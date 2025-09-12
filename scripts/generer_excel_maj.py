@@ -1,8 +1,8 @@
 import pandas as pd
 
 # Chemin vers ton fichier original
-input_file = r"C:\Users\cdel\OneDrive - Converteo\PROSPECTION\Suivi Prospection CPG.xlsx"
-output_file = r"C:\Users\cdel\OneDrive - Converteo\PROSPECTION\Suivi Prospection CPGMAJ.xlsx"
+input_file = r"../data/Suivi Prospection CPG.xlsx"
+output_file = r"../data/Suivi Prospection CPGMAJ.xlsx"
 
 # Charger la feuille FMCG GLOBAL
 df = pd.read_excel(input_file, sheet_name="FMCG GLOBAL", engine="openpyxl")

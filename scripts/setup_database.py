@@ -1,7 +1,7 @@
 # setup_database.py
 import sqlite3
 
-DB_FILE = "prospection.db"
+DB_FILE = "../data/prospection.db"
 
 def setup():
     """Crée ou met à jour les tables de la base de données."""

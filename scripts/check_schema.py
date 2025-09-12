@@ -1,7 +1,7 @@
 # check_schema.py
 import sqlite3
 
-DB_FILE = "prospection.db"
+DB_FILE = "../data/prospection.db"
 print(f"--- Vérification du schéma de '{DB_FILE}' ---")
 try:
     con = sqlite3.connect(DB_FILE)

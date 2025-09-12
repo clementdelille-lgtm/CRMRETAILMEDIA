@@ -4,8 +4,8 @@ from sqlalchemy import create_engine
 import sqlite3
 
 # --- PARAMÈTRES ---
-EXCEL_FILE = "Suivi Prospection CPGMAJ.xlsx"
-DB_FILE = "prospection.db"
+EXCEL_FILE = "../data/Suivi Prospection CPGMAJ.xlsx"
+DB_FILE = "../data/prospection.db"
 COLONNE_COMPTES_EXCEL = "comptes" # Nom de la colonne dans Excel qui contient les noms des comptes
 
 engine = create_engine(f"sqlite:///{DB_FILE}")

@@ -4,7 +4,7 @@ import sqlalchemy
 import os
 
 # --- CONFIGURATION ---
-DB_FILE = "prospection.db"
+DB_FILE = "../data/prospection.db"
 
 def get_local_sqlite_connection():
     """Crée et retourne une connexion à la base de données SQLite locale."""
@@ -25,15 +25,15 @@ def export_tables_to_csv():
             print("Exportation de la table 'comptes'...")
             df_comptes = pd.read_sql("SELECT * FROM comptes", con)
             # La fonction to_csv inclut les en-têtes par défaut (header=True)
-            df_comptes.to_csv("comptes_export.csv", index=False, encoding='utf-8-sig')
-            print(f"-> Fichier 'comptes_export.csv' créé avec {len(df_comptes)} lignes.")
+            df_comptes.to_csv("../data/comptes_export.csv", index=False, encoding='utf-8-sig')
+            print(f"-> Fichier '../data/comptes_export.csv' créé avec {len(df_comptes)} lignes.")
 
             # --- Exporter la table 'contacts' ---
             print("\nExportation de la table 'contacts'...")
             df_contacts = pd.read_sql("SELECT * FROM contacts", con)
             # La fonction to_csv inclut les en-têtes par défaut (header=True)
-            df_contacts.to_csv("contacts_export.csv", index=False, encoding='utf-8-sig')
-            print(f"-> Fichier 'contacts_export.csv' créé avec {len(df_contacts)} lignes.")
+            df_contacts.to_csv("../data/contacts_export.csv", index=False, encoding='utf-8-sig')
+            print(f"-> Fichier '../data/contacts_export.csv' créé avec {len(df_contacts)} lignes.")
             
             print("\n🎉 Exportation terminée avec succès !")
 

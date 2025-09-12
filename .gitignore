@@ -1,12 +1,24 @@
-# Fichier de base de données (ne pas versionner les données en direct)
-# prospection.db
 
-# Dossier de l'environnement virtuel
-prospection_env/
+# Fichiers de données
+*.csv
+*.xlsx
+*.db
 
-# Fichier des secrets (NE JAMAIS PUBLIER)
-.streamlit/secrets.toml
+# Fichiers de configuration et de lancement spécifiques à l'environnement
+*.bat
+*.sh
 
 # Dossiers de cache Python
 __pycache__/
-*.pyc
+.ipynb_checkpoints/
+
+# Fichiers Excel et CSV
+Suivi Prospection CPG.xlsx
+Suivi Prospection CPGMAJ - Copie.Csv
+Suivi Prospection CPGMAJ.csv
+Suivi Prospection CPGMAJ.xlsx
+comptes_export.csv
+contacts_export.csv
+
+# Base de données
+prospection.db
