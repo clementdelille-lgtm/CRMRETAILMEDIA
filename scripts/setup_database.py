@@ -17,15 +17,12 @@ def setup():
             notes TEXT
         )
     """)
-    # Ajout des colonnes à 'comptes'
     try:
         cur.execute("ALTER TABLE comptes ADD COLUMN lien_hubspot TEXT")
-    except sqlite3.OperationalError:
-        pass # La colonne existe déjà
+    except sqlite3.OperationalError: pass
     try:
-        cur.execute("ALTER TABLE comptes ADD COLUMN client_converteo TEXT") # O/N
-    except sqlite3.OperationalError:
-        pass # La colonne existe déjà
+        cur.execute("ALTER TABLE comptes ADD COLUMN client_converteo TEXT")
+    except sqlite3.OperationalError: pass
     print("Table 'comptes' configurée.")
 
     # --- Table 'contacts' ---
@@ -40,22 +37,15 @@ def setup():
             FOREIGN KEY (compte_id) REFERENCES comptes (id)
         )
     """)
-    # Ajout des colonnes à 'contacts'
     try:
         cur.execute("ALTER TABLE contacts ADD COLUMN email TEXT")
-    except sqlite3.OperationalError:
-        pass
+    except sqlite3.OperationalError: pass
     try:
         cur.execute("ALTER TABLE contacts ADD COLUMN linkedin TEXT")
-    except sqlite3.OperationalError:
-        pass
+    except sqlite3.OperationalError: pass
     try:
         cur.execute("ALTER TABLE contacts ADD COLUMN derniere_action TEXT")
-    except sqlite3.OperationalError:
-        pass
-    print("Table 'contacts' configurée.")
-
-# Ajout des nouveaux champs pour la Feature 1
+    except sqlite3.OperationalError: pass
     try:
         cur.execute("ALTER TABLE contacts ADD COLUMN date_prochaine_action DATE")
     except sqlite3.OperationalError: pass
@@ -64,7 +54,7 @@ def setup():
     except sqlite3.OperationalError: pass
     print("Table 'contacts' configurée.")
 
-    # --- NOUVELLE TABLE 'interactions' pour la Feature 3 ---
+    # --- Table 'interactions' ---
     cur.execute("""
         CREATE TABLE IF NOT EXISTS interactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,6 +66,38 @@ def setup():
         )
     """)
     print("Table 'interactions' configurée.")
+
+    # --- NOUVELLES TABLES POUR LE SYSTÈME DE TAGS (Feature 1) ---
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nom TEXT UNIQUE NOT NULL,
+            couleur TEXT DEFAULT '#4e8ec6'
+        )
+    """)
+    print("Table 'tags' configurée.")
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS contact_tags (
+            contact_id INTEGER NOT NULL,
+            tag_id INTEGER NOT NULL,
+            PRIMARY KEY (contact_id, tag_id),
+            FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE CASCADE,
+            FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
+        )
+    """)
+    print("Table 'contact_tags' configurée.")
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS compte_tags (
+            compte_id INTEGER NOT NULL,
+            tag_id INTEGER NOT NULL,
+            PRIMARY KEY (compte_id, tag_id),
+            FOREIGN KEY (compte_id) REFERENCES comptes (id) ON DELETE CASCADE,
+            FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
+        )
+    """)
+    print("Table 'compte_tags' configurée.")
 
 
     con.commit()
